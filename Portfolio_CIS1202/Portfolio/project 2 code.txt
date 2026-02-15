@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Computer Lab Network Manual</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f8fafc;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    header {
+      position: relative;
+      text-align: center;
+      color: white;
+    }
+
+    header img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    nav {
+      background-color: #e0e7ff;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 0.75rem;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #004aad;
+      font-weight: bold;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+
+    nav a:hover {
+      background-color: #c7d2fe;
+    }
+
+    section {
+      padding: 2rem;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h2 {
+      border-bottom: 2px solid #004aad;
+      padding-bottom: 0.3rem;
+      color: #004aad;
+    }
+
+    dl dt {
+      font-weight: bold;
+      color: #1e3a8a;
+    }
+
+    dl dd {
+      margin: 0 0 1rem 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.8rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: #e0e7ff;
+      color: #1e3a8a;
+    }
+
+    form {
+      margin-top: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    button {
+      background-color: #004aad;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #2563eb;
+    }
+
+    footer {
+      background-color: #1e3a8a;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+
+    footer a {
+      color: #93c5fd;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    figure {
+      text-align: center;
+      margin: 1.5rem auto;
+    }
+
+    figure img {
+      max-width: 100%;
+      height: auto;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    figure figcaption {
+      margin-top: 0.5rem;
+      font-style: italic;
+      color: #555;
+    }
+
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="bb85fa59-c2c1-4625-94e4-1b1e6867de8f.png" alt="School Computer Lab Network Manual Banner">
+  </header>
+
+  <nav>
+    <a href="#intro">Intro</a>
+    <a href="#types">Types</a>
+    <a href="#topologies">Topologies</a>
+    <a href="#technologies">Technologies</a>
+    <a href="#tools">Tools</a>
+    <a href="#cabling">Cabling</a>
+    <a href="#testing">Cable Testing</a>
+  </nav>
+
+  <section id="intro">
+    <h2>Introduction</h2>
+    <p>
+       This <strong>School Computer Lab Network Manual</strong> is designed to help students and staff understand how the school’s computer lab network operates. 
+      It covers the basic network types, topologies, technologies, and tools used to maintain smooth and secure connections. 
+      The manual also guides students on proper handling of cables and performing simple network checks before using the lab equipment.
+    </p>
+  </section>
+
+  <section id="types">
+    <h2>Types of Networks</h2>
+    <p>Our school network is made up of several interconnected systems. Below are the network types used within our school setup:</p>
+    <dl>
+      <dt>LAN (Local Area Network)</dt>
+      <dd>Connects all computers, printers, and the server within the computer lab or building.</dd>
+
+      <dt>WAN (Wide Area Network)</dt>
+      <dd>Connects the school’s local network to the Division or DepEd network for internet and resource sharing.</dd>
+
+      <dt>MAN (Metropolitan Area Network)</dt>
+      <dd>Used when connecting nearby schools or educational offices within the same city.</dd>
+
+      <dt>PAN (Personal Area Network)</dt>
+      <dd>Used for short-distance communication between personal devices such as laptops or phones.</dd>
+    </dl>
+  </section>
+
+  <section id="topologies">
+    <h2>Network Topologies</h2>
+    <p>
+      The school’s computer lab follows a <strong>Star Topology</strong> layout. All computers are connected to a central hub or switch that distributes data across the network.
+      This structure makes it easier to detect and fix issues—if one computer or cable fails, the rest of the network stays connected.
+    </p>
+
+    <figure>
+      <img src="star topology.png" alt="Diagram of Star Topology in the School Lab">
+      <figcaption>Figure 1: Star Topology – Common network layout used in the computer lab.</figcaption>
+    </figure>
+  </section>
+
+  <section id="technologies">
+    <h2>Networking Technologies</h2>
+    <p>
+      The lab uses <strong>Ethernet (Cat6)</strong> for wired connections and <strong>Wi-Fi</strong> for wireless access. 
+      Each workstation is connected through a switch to ensure reliable communication. 
+      A firewall router controls data flow, providing both internet access and protection.
+    </p>
+    <p>
+      The school’s server stores student files, and the system uses IP addressing and DHCP to automatically assign connections to devices.
+    </p>
+
+    <figure>
+      <img src="0a7df387-0a48-455e-ad47-97402b0dd12c.png" alt="Cat6 Ethernet Cable">
+      <figcaption>Figure 2: Cat6 Ethernet Cable — used for wired connections in the computer lab.</figcaption>
+    </figure>
+  </section>
+
+  <section id="tools">
+    <h2>Network Tools and Equipment</h2>
+    <p>These are the key tools used to maintain and repair the computer lab network:</p>
+    <ul>
+      <li><strong>Crimping Tool:</strong> Attaches RJ45 connectors to Ethernet cables.</li>
+      <li><strong>LAN Tester:</strong> Checks if cables are properly wired and working.</li>
+      <li><strong>Wire Stripper:</strong> Removes cable insulation for connector attachment.</li>
+      <li><strong>Patch Panel:</strong> Keeps cable connections neat and organized.</li>
+      <li><strong>Switch and Router:</strong> Manage data transmission and internet access.</li>
+    </ul>
+  </section>
+
+  <section id="cabling">
+    <h2>Cable Types Used in the Lab</h2>
+    <p>The computer lab uses several cable types for different purposes:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Cable Type</th>
+          <th>Maximum Distance</th>
+          <th>Common Use</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Twisted Pair (Cat6)</strong></td>
+          <td>100 meters</td>
+          <td>Connects computers to switches and routers.</td>
+        </tr>
+        <tr>
+          <td><strong>Coaxial Cable</strong></td>
+          <td>Up to 500 meters</td>
+          <td>Used in CCTV systems and old network setups.</td>
+        </tr>
+        <tr>
+          <td><strong>Fiber Optic Cable</strong></td>
+          <td>Up to 10 kilometers</td>
+          <td>Used for high-speed backbone connections between buildings.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="testing">
+    <h2>Cable Testing — Pre-Test Checklist</h2>
+    <p>Before using the lab, perform this checklist to ensure all systems are working properly:</p>
+    <form>
+      <label><input type="checkbox"> Power on the computer and network switch</label>
+      <label><input type="checkbox"> Confirm Ethernet cable is securely connected</label>
+      <label><input type="checkbox"> Check if link lights on the switch are active</label>
+      <label><input type="checkbox"> Use a LAN tester to verify cable connectivity</label>
+      <button type="submit">Submit Checklist</button>
+    </form>
+  </section>
+
+  <footer>
+    <p>Contact: <a href="mailto:labadmin@school.edu.ph">labadmin@school.edu.ph</a></p>
+    <p>Last Updated: <time datetime="2025-10-31">October 31, 2025</time></p>
+  </footer>
+
+</body>
+</html>
