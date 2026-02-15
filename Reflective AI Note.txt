@@ -1,0 +1,39 @@
+Student Reflective AI Note Template
+Course: CIS 1202 - Web Development I
+Week No / Task: Week 2: Semantic Scaffolding
+Date: February 13 - 15, 2026
+
+Section 1: The Interaction Log (The "How")
+AI Tool Used: Gemini 3
+Primary Prompt: "I am a first-year IS student taking Web Development I. I need to create a portfolio front 
+page using only semantic HTML5 tags. It needs a Header, Hero section, About Me, Project List, and Footer. 
+Please do not use any CSS or style tags. The 'About Me' section should use the <article> tag, and the Footer 
+should use <address>."
+
+Refinement Steps: The first code used a simple list <uli> for the projects. I asked it to rewrite the Project 
+list section using <div> and <figure> tags to handle media and captions better, as required by the activity table.
+
+Section 2: Technical Validation (The "What")
+Code Explanation: Gemini provided code that uses <header> and <nav> for the top section, which helps search 
+engines understand that this is the main navigation of the site. It also used <section> for the Hero section 
+area and <article> for the About Me section to semantically separate the content types.
+
+Manual Edits:
+I manually changed the image source path from src=”profile.jpg” to src=”image/gwapo.jpg” to match the “Relative Path” challenge requirement.
+I added target=”_blank” to the GitHub link in the footer so it opens in a new tab, which Gemini originally omitted.
+
+Section 3: Learning Reflection (The "Why")
+The "Aha!" Moment: One thing Gemini did that I wouldn’t have known how to do was using the <address> 
+tag inside the footer. I thought <address> was only for physical street addresses, but Gemini used it 
+to wrap the email and social links, which is valid HTML5 for contact info.
+
+Documentation Cross-Check: Did you verify the AI's code against a reliable source (like MDN Web Docs)?
+[/] Yes / [ ] No
+I verified the usage of the <address> and <figure> tags on MDN Web Docs to ensure they were used semantically 
+for contact info and project images.
+
+Section 4: Compliance & Integrity Statement
+Integrity Check: I confirm that while AI assisted in generating the initial structure/logic, I have manually 
+reviewed, edited, and can fully explain every line of code in this submission.
+
+Signature/Initials: DIREL CHRISTIAN P. AGUINALDO / D.C.A.
