@@ -1,0 +1,151 @@
+/* CSS Variables - Professional Color Scheme */
+:root {
+    --primary-color: #1e3a5f;      /* Deep blue */
+    --secondary-color: #2563eb;    /* Bright blue */
+    --accent-color: #f59e0b;       /* Amber accent */
+    --text-dark: #1f2937;          /* Dark gray text */
+    --text-light: #f3f4f6;         /* Light text */
+    --background: #ffffff;         /* White background */
+    --border-color: #e5e7eb;       /* Light gray border */
+    --hover-color: #1e40af;        /* Darker blue on hover */
+}
+
+/* General Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-dark);
+    background-color: var(--background);
+    line-height: 1.6;
+}
+
+/* Header Styling */
+header {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    padding: 1.5rem 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+/* Navigation Bar - FLEXBOX LAYOUT */
+nav ul {
+    display: flex;           /* Activates Flexbox */
+    justify-content: space-around;  /* Distributes links evenly */
+    align-items: center;     /* Vertically centers links */
+    list-style: none;
+    gap: 2rem;              /* Space between links */
+    flex-wrap: wrap;        /* Allows wrapping on smaller screens */
+}
+
+nav a {
+    color: var(--text-light);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.75rem 1rem;  /* Padding explained below */
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+nav a:hover {
+    background-color: var(--secondary-color);
+    color: var(--text-light);
+    transform: translateY(-2px);
+}
+
+/* Main Content Styling */
+section, article {
+    padding: 2rem;
+    margin: 1rem 0;
+}
+
+section h2, article h2 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+/* Projects Section */
+#projects div {
+    background-color: #f9fafb;
+    border-left: 4px solid var(--secondary-color);
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-radius: 4px;
+    transition: transform 0.3s ease;
+}
+
+#projects div:hover {
+    transform: translateX(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#projects a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+#projects a:hover {
+    color: var(--accent-color);
+}
+
+/* Footer */
+footer {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    padding: 2rem;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+footer a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+footer a:hover {
+    color: var(--text-light);
+}
+
+/* Hero Section - Image and Text Layout */
+.hero-content {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.profile-pic {
+    width: 200px;
+    height: 200px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.hero-content p {
+    flex: 1;
+    min-width: 250px;
+    text-align: justify;
+}
+
+/* Horizontal Rule Styling */
+hr {
+    border: none;
+    border-top: 2px solid var(--border-color);
+    margin: 1rem 0;
+}
