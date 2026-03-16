@@ -6,8 +6,22 @@
     --text-dark: #1f2937;          /* Dark gray text */
     --text-light: #f3f4f6;         /* Light text */
     --background: #ffffff;         /* White background */
+    --card-bg: #f9fafb;            /* Light card background */
     --border-color: #e5e7eb;       /* Light gray border */
     --hover-color: #1e40af;        /* Darker blue on hover */
+}
+
+/* Dark Mode Variables (applied when body has .dark-mode) */
+body.dark-mode {
+    --primary-color: #020617;      /* Nearly black navy */
+    --secondary-color: #38bdf8;    /* Light cyan accent */
+    --accent-color: #facc15;       /* Warm yellow accent */
+    --text-dark: #e5e7eb;          /* Light gray text */
+    --text-light: #f9fafb;         /* Lighter text */
+    --background: #020617;         /* Page background */
+    --card-bg: #0f172a;            /* Card background */
+    --border-color: #1f2937;       /* Dark border */
+    --hover-color: #0ea5e9;        /* Brighter hover */
 }
 
 /* General Styles */
@@ -22,6 +36,13 @@ body {
     color: var(--text-dark);
     background-color: var(--background);
     line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Explicit dark mode base styles for clear visual change */
+body.dark-mode {
+    background-color: #020617;
+    color: #e5e7eb;
 }
 
 /* Header Styling */
@@ -77,17 +98,17 @@ section h2, article h2 {
 
 /* Projects Section */
 #projects div {
-    background-color: #f9fafb;
+    background-color: var(--card-bg);
     border-left: 4px solid var(--secondary-color);
     padding: 1.5rem;
     margin: 1rem 0;
     border-radius: 4px;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 #projects div:hover {
     transform: translateX(8px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.4);
 }
 
 #projects a {
