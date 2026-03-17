@@ -61,20 +61,29 @@ header h1 {
 }
 
 /* Navigation Bar - FLEXBOX LAYOUT */
-nav ul {
+nav.top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+nav.top-nav ul {
     display: flex;           /* Activates Flexbox */
     justify-content: space-around;  /* Distributes links evenly */
     align-items: center;     /* Vertically centers links */
     list-style: none;
-    gap: 2rem;              /* Space between links */
+    gap: 1rem;              /* Space between links */
     flex-wrap: wrap;        /* Allows wrapping on smaller screens */
+    margin: 0;
+    padding: 0;
 }
 
 nav a {
     color: var(--text-light);
     text-decoration: none;
     font-weight: 500;
-    padding: 0.75rem 1rem;  /* Padding explained below */
+    padding: 0.4rem 0.8rem;
     border-radius: 4px;
     transition: all 0.3s ease;
 }
@@ -85,6 +94,28 @@ nav a:hover {
     transform: translateY(-2px);
 }
 
+#dark-mode-toggle {
+    background: var(--accent-color);
+    color: #111827;
+    border: none;
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+#dark-mode-toggle:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+}
+
+body.dark-mode #dark-mode-toggle {
+    background: #fbbf24;
+    color: #0f172a;
+}
+
 /* Main Content Styling */
 section, article {
     padding: 2rem;
@@ -92,7 +123,7 @@ section, article {
 }
 
 section h2, article h2 {
-    color: var(--primary-color);
+    color: var(--text-dark);
     margin-bottom: 1rem;
     font-size: 1.5rem;
 }
