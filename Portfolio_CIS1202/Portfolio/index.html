@@ -46,14 +46,32 @@ Beyond technical skills, I value continuous learning, collaboration, and attenti
             As an aspiring Information Systems professional, I bridge the gap between business requirements and technical implementation. 
             Currently honing my skills in HTML, CSS, and JavaScript while exploring the wider tech ecosystem in Cebu.
         </p>
-        <p>
-            My technical interests include:
-        </p>
-        <ul>
-            <li>HTML5 & Semantic Markup</li>
-            <li>CSS3 (Flexbox/Grid)</li>
-            <li>JavaScript (ES6+)</li>
-        </ul>
+        <section id="skills">
+            <h2>My Skills</h2>
+            
+            <div class="skills-toggle">
+                <button onclick="showSkills('tech')">Technical Skills</button>
+                <button onclick="showSkills('soft')">Soft Skills</button>
+            </div>
+        
+            <div id="tech-skills">
+                <h3>Technical Skills</h3>
+                <ul>
+                    <li>HTML5 & Semantic Markup</li>
+                    <li>CSS3 (Flexbox/Grid)</li>
+                    <li>JavaScript (ES6+)</li>
+                </ul>
+            </div>
+        
+            <div id="soft-skills" style="display: none;">
+                <h3>Non-Technical Skills</h3>
+                <ul>
+                    <li>Project Management</li>
+                    <li>System Analysis</li>
+                    <li>Logic-based Problem Solving</li>
+                </ul>
+            </div>
+        </section>
     </article>
 
     <hr>
