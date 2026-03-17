@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Traffic Light Controller</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <h1>Traffic Control</h1>
+      <p class="subtitle">Simple Intersection Simulator</p>
+      <button id="switchButton">Switch Lights</button>
+      <div class="status">
+        Current Green: <span id="currentGreenLabel">North-South</span>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <div class="intersection">
+        <div class="traffic-group">
+          <h2>North - South</h2>
+          <div class="traffic-light">
+            <div id="ns-red" class="light red"></div>
+            <div id="ns-yellow" class="light yellow"></div>
+            <div id="ns-green" class="light green active"></div>
+          </div>
+        </div>
+
+        <div class="traffic-group">
+          <h2>East - West</h2>
+          <div class="traffic-light">
+            <div id="ew-red" class="light red active"></div>
+            <div id="ew-yellow" class="light yellow"></div>
+            <div id="ew-green" class="light green"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="event-log" aria-label="Event Log">
+      <div class="event-log__header">
+        <h2>Event Log</h2>
+        <button id="clearLogButton" type="button" class="event-log__clear">
+          Clear
+        </button>
+      </div>
+      <ol id="eventLogList" class="event-log__list" aria-live="polite"></ol>
+    </aside>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
