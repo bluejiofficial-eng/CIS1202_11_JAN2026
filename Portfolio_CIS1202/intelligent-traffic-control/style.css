@@ -72,6 +72,33 @@ body {
   cursor: not-allowed;
 }
 
+#pedestrianButton {
+  padding: 0.85rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(207, 211, 229, 0.25);
+  background: linear-gradient(135deg, rgba(21, 23, 30, 0.95), rgba(42, 47, 64, 0.8));
+  color: #d9deef;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.2s ease;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+#pedestrianButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.55);
+}
+
+#pedestrianButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+#pedestrianButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .status {
   margin-top: 0.5rem;
   font-size: 0.9rem;
@@ -92,6 +119,15 @@ body {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+}
+
+.simulation-stage {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
 }
 
 .event-log {
@@ -191,6 +227,20 @@ body {
   color: #cfd3e5;
 }
 
+.countdown {
+  min-width: 74px;
+  text-align: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 20, 27, 0.75);
+  color: #7ef7d7;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
 .traffic-light {
   background: #111319;
   border-radius: 2rem;
@@ -236,6 +286,36 @@ body {
     0 0 35px rgba(0, 0, 0, 0.8);
 }
 
+.pedestrian-display {
+  width: min(100%, 320px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 17, 23, 0.85);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 20px 35px rgba(0, 0, 0, 0.55);
+  font-weight: 700;
+}
+
+.pedestrian-display.walk {
+  color: #7ef7b1;
+  text-shadow: 0 0 8px rgba(126, 247, 177, 0.3);
+}
+
+.pedestrian-display.dont-walk {
+  color: #ff7d7d;
+  text-shadow: 0 0 8px rgba(255, 125, 125, 0.2);
+}
+
+#pedestrianCountdown {
+  font-variant-numeric: tabular-nums;
+}
+
 /* Desktop layout */
 @media (min-width: 768px) {
   .app-container {
@@ -267,5 +347,9 @@ body {
   .intersection {
     flex-direction: row;
     justify-content: space-evenly;
+  }
+
+  .simulation-stage {
+    gap: 1.5rem;
   }
 }

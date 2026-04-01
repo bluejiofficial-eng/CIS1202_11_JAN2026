@@ -12,29 +12,39 @@
       <h1>Traffic Control</h1>
       <p class="subtitle">Simple Intersection Simulator</p>
       <button id="switchButton">Switch Lights</button>
+      <button id="pedestrianButton">Request Pedestrian Crossing</button>
       <div class="status">
         Current Green: <span id="currentGreenLabel">North-South</span>
       </div>
     </aside>
 
     <main class="main-area">
-      <div class="intersection">
-        <div class="traffic-group">
-          <h2>North - South</h2>
-          <div class="traffic-light">
-            <div id="ns-red" class="light red"></div>
-            <div id="ns-yellow" class="light yellow"></div>
-            <div id="ns-green" class="light green active"></div>
+      <div class="simulation-stage">
+        <div class="intersection">
+          <div class="traffic-group">
+            <h2>North - South</h2>
+            <div id="ns-counter" class="countdown" aria-live="polite">0s</div>
+            <div class="traffic-light">
+              <div id="ns-red" class="light red"></div>
+              <div id="ns-yellow" class="light yellow"></div>
+              <div id="ns-green" class="light green active"></div>
+            </div>
+          </div>
+
+          <div class="traffic-group">
+            <h2>East - West</h2>
+            <div id="ew-counter" class="countdown" aria-live="polite">0s</div>
+            <div class="traffic-light">
+              <div id="ew-red" class="light red active"></div>
+              <div id="ew-yellow" class="light yellow"></div>
+              <div id="ew-green" class="light green"></div>
+            </div>
           </div>
         </div>
 
-        <div class="traffic-group">
-          <h2>East - West</h2>
-          <div class="traffic-light">
-            <div id="ew-red" class="light red active"></div>
-            <div id="ew-yellow" class="light yellow"></div>
-            <div id="ew-green" class="light green"></div>
-          </div>
+        <div id="pedestrianDisplay" class="pedestrian-display dont-walk" aria-live="polite">
+          <span id="pedestrianSignalText">DON'T WALK</span>
+          <span id="pedestrianCountdown">0s</span>
         </div>
       </div>
     </main>
