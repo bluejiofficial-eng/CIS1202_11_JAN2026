@@ -11,6 +11,44 @@
     <aside class="sidebar">
       <h1>Traffic Control</h1>
       <p class="subtitle">Simple Intersection Simulator</p>
+      <section class="mode-panel" aria-label="Mode Controls">
+        <div class="mode-slider-wrap">
+          <span class="mode-label">Manual</span>
+          <label class="mode-switch" for="modeToggle">
+            <input id="modeToggle" type="checkbox" />
+            <span class="mode-switch__slider"></span>
+          </label>
+          <span class="mode-label">Timer</span>
+        </div>
+
+        <div class="config-grid">
+          <label class="config-field" for="pedWalkInput">
+            <span>Ped Walk (sec)</span>
+            <input id="pedWalkInput" type="number" min="1" value="15" />
+          </label>
+          <label class="config-field" for="queueClearanceInput">
+            <span>Queue / Clearance (sec)</span>
+            <input id="queueClearanceInput" type="number" min="1" value="2" />
+          </label>
+        </div>
+
+        <div id="timerPanel" class="timer-panel hidden">
+          <div class="config-grid">
+            <label class="config-field" for="nsGoInput">
+              <span>N-S Go Time (sec)</span>
+              <input id="nsGoInput" type="number" min="1" value="12" />
+            </label>
+            <label class="config-field" for="ewGoInput">
+              <span>E-W Go Time (sec)</span>
+              <input id="ewGoInput" type="number" min="1" value="12" />
+            </label>
+          </div>
+          <div class="timer-actions">
+            <button id="timerStartButton" type="button">Start</button>
+            <button id="timerStopButton" type="button">Stop</button>
+          </div>
+        </div>
+      </section>
       <button id="switchButton">Switch Lights</button>
       <button id="pedestrianButton">Request Pedestrian Crossing</button>
       <div class="status">

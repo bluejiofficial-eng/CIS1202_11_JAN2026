@@ -43,6 +43,132 @@ body {
   color: #9aa0b5;
 }
 
+.mode-panel {
+  background: rgba(10, 12, 18, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.mode-slider-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.mode-label {
+  font-size: 0.82rem;
+  color: #cfd3e5;
+  font-weight: 600;
+}
+
+.mode-switch {
+  position: relative;
+  width: 58px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.mode-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.mode-switch__slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #2d3346;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mode-switch__slider::before {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 4px;
+  top: 3px;
+  border-radius: 50%;
+  background: #f4f6ff;
+  transition: 0.2s ease;
+}
+
+.mode-switch input:checked + .mode-switch__slider {
+  background: linear-gradient(135deg, #2a9d8f, #1f6f63);
+}
+
+.mode-switch input:checked + .mode-switch__slider::before {
+  transform: translateX(28px);
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.config-field span {
+  font-size: 0.78rem;
+  color: #aeb4ca;
+}
+
+.config-field input {
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(12, 14, 20, 0.9);
+  color: #e5e5e5;
+  padding: 0.42rem 0.55rem;
+}
+
+.timer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.timer-actions {
+  display: flex;
+  gap: 0.55rem;
+}
+
+#timerStartButton,
+#timerStopButton {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 0.75rem;
+  color: #eef1ff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#timerStartButton {
+  background: linear-gradient(135deg, #2a9d8f, #1f6f63);
+}
+
+#timerStopButton {
+  background: linear-gradient(135deg, #71314f, #52233a);
+}
+
+.hidden {
+  display: none;
+}
+
 #switchButton {
   margin-top: 0.5rem;
   padding: 0.9rem 1.2rem;
