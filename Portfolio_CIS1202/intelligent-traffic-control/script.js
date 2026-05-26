@@ -70,6 +70,49 @@ function logEvent(message) {
   list.scrollTop = list.scrollHeight;
 }
 
+async function fetchStateFromAPI() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts/1");
+    if (!response.ok) throw new Error("API state load failed");
+    await response.json();
+    logEvent("API: State loaded from server");
+  } catch (error) {
+    logEvent("API: State load failed");
+  }
+}
+
+async function sendStateToAPI(state) {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        currentGreen: state.currentGreen,
+        mode: state.mode,
+        config: state.config,
+      }),
+    });
+
+    if (!response.ok) throw new Error("API sync failed");
+    logEvent("API: State synced to server");
+  } catch (error) {
+    logEvent("API: Sync failed");
+  }
+}
+
+function saveState() {
+  localStorage.setItem(
+    "trafficState",
+    JSON.stringify({
+      currentGreen,
+      mode,
+      config,
+    })
+  );
+}
+
 function setCounter(counterId, seconds) {
   const counter = document.getElementById(counterId);
   if (!counter) return;
@@ -202,6 +245,8 @@ function switchSequence() {
     logEvent(`${dirShort(toDir)} → GO`);
 
     currentGreen = toDir;
+    saveState();
+    sendStateToAPI({ currentGreen: toDir, mode, config });
     updateLabel();
     isTransitioning = false;
     setControlsDisabled(false);
@@ -359,6 +404,8 @@ function setMode(newMode) {
   }
 
   applyModeUI();
+  saveState();
+  sendStateToAPI({ currentGreen, mode, config });
 }
 
 function initModeControls() {
@@ -407,6 +454,7 @@ function initModeControls() {
 
 function init() {
   resetToInitialState();
+  fetchStateFromAPI();
   if (countdownIntervalId) clearInterval(countdownIntervalId);
   countdownIntervalId = setInterval(updateCounters, 250);
   logEvent(`${dirShort("NS")} → GO`);
