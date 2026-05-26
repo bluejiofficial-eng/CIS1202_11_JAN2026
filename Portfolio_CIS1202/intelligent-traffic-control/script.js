@@ -24,6 +24,7 @@ const config = {
   nsGoSeconds: 12,
   ewGoSeconds: 12,
 };
+let shouldRestoreInitialDirection = false;
 
 function clampSeconds(value, fallback) {
   const parsed = Number.parseInt(value, 10);
@@ -202,6 +203,7 @@ function switchSequence() {
     logEvent(`${dirShort(toDir)} → GO`);
 
     currentGreen = toDir;
+    saveState();
     updateLabel();
     isTransitioning = false;
     setControlsDisabled(false);
@@ -276,7 +278,8 @@ function requestPedestrianCrossing() {
 }
 
 function resetToInitialState() {
-  currentGreen = "NS";
+  currentGreen = shouldRestoreInitialDirection ? currentGreen : "NS";
+  shouldRestoreInitialDirection = false;
   isTransitioning = false;
   pendingPedestrian = false;
   pedestrianActive = false;
@@ -295,8 +298,8 @@ function resetToInitialState() {
   }
   clearGoPhaseTimers();
 
-  setLights("NS", "green");
-  setLights("EW", "red");
+  setLights(currentGreen, "green");
+  setLights(currentGreen === "NS" ? "EW" : "NS", "red");
   setPedestrianSignal(false, 0);
   updateLabel();
   updateCounters();
@@ -359,6 +362,7 @@ function setMode(newMode) {
   }
 
   applyModeUI();
+  saveState();
 }
 
 function initModeControls() {
@@ -405,12 +409,61 @@ function initModeControls() {
   }
 }
 
+function saveState() {
+  const state = {
+    currentGreen,
+    mode,
+    config: { ...config },
+  };
+  localStorage.setItem("trafficState", JSON.stringify(state));
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem("trafficState");
+    if (!saved) return;
+
+    const state = JSON.parse(saved);
+
+    if (state.currentGreen === "NS" || state.currentGreen === "EW") {
+      currentGreen = state.currentGreen;
+      shouldRestoreInitialDirection = true;
+    }
+
+    if (state.mode === "manual" || state.mode === "timer") {
+      mode = state.mode;
+    }
+
+    if (state.config && typeof state.config === "object") {
+      config.pedWalkSeconds = clampSeconds(state.config.pedWalkSeconds, config.pedWalkSeconds);
+      config.queueClearanceSeconds = clampSeconds(state.config.queueClearanceSeconds, config.queueClearanceSeconds);
+      config.nsGoSeconds = clampSeconds(state.config.nsGoSeconds, config.nsGoSeconds);
+      config.ewGoSeconds = clampSeconds(state.config.ewGoSeconds, config.ewGoSeconds);
+    }
+
+    const modeToggle = document.getElementById("modeToggle");
+    const pedWalkInput = document.getElementById("pedWalkInput");
+    const queueInput = document.getElementById("queueClearanceInput");
+    const nsGoInput = document.getElementById("nsGoInput");
+    const ewGoInput = document.getElementById("ewGoInput");
+
+    if (modeToggle) modeToggle.checked = mode === "timer";
+    if (pedWalkInput) pedWalkInput.value = String(config.pedWalkSeconds);
+    if (queueInput) queueInput.value = String(config.queueClearanceSeconds);
+    if (nsGoInput) nsGoInput.value = String(config.nsGoSeconds);
+    if (ewGoInput) ewGoInput.value = String(config.ewGoSeconds);
+  } catch (e) {
+    console.warn("Could not load saved state:", e);
+  }
+}
+
 function init() {
+  loadState();
   resetToInitialState();
   if (countdownIntervalId) clearInterval(countdownIntervalId);
   countdownIntervalId = setInterval(updateCounters, 250);
-  logEvent(`${dirShort("NS")} → GO`);
-  logEvent(`${dirShort("EW")} → STOP`);
+  logEvent(`${dirShort(currentGreen)} → GO`);
+  logEvent(`${dirShort(currentGreen === "NS" ? "EW" : "NS")} → STOP`);
 
   const switchButton = document.getElementById("switchButton");
   if (switchButton) {
