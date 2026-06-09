@@ -9,8 +9,16 @@
 <body>
   <div class="app-container">
     <aside class="sidebar">
-      <h1>Traffic Control</h1>
-      <p class="subtitle">Simple Intersection Simulator</p>
+      <header class="sidebar__header">
+        <h1>Traffic Control</h1>
+        <p class="subtitle">Simple Intersection Simulator</p>
+        <div class="status-badges">
+          <span id="modeBadge" class="badge badge--manual">Manual</span>
+          <span id="storageBadge" class="badge badge--neutral">Storage: —</span>
+          <span id="apiBadge" class="badge badge--neutral">API: —</span>
+        </div>
+      </header>
+
       <section class="mode-panel" aria-label="Mode Controls">
         <div class="mode-slider-wrap">
           <span class="mode-label">Manual</span>
@@ -49,11 +57,25 @@
           </div>
         </div>
       </section>
-      <button id="switchButton">Switch Lights</button>
-      <button id="pedestrianButton">Request Pedestrian Crossing</button>
-      <div class="status">
-        Current Green: <span id="currentGreenLabel">North-South</span>
-      </div>
+
+      <section class="action-panel" aria-label="Traffic Actions">
+        <button id="switchButton" type="button">Switch Lights</button>
+        <button id="pedestrianButton" type="button">Request Pedestrian Crossing</button>
+        <div class="status">
+          Current Green: <span id="currentGreenLabel">North-South</span>
+        </div>
+      </section>
+
+      <section class="persist-panel" aria-label="Save and Sync">
+        <h2 class="panel-title">Data</h2>
+        <div class="persist-actions">
+          <button id="saveLocalButton" type="button">Save Locally</button>
+          <button id="loadLocalButton" type="button">Load Local</button>
+          <button id="clearLocalButton" type="button" class="btn--muted">Clear Local</button>
+          <button id="syncApiButton" type="button">Sync to API</button>
+          <button id="loadApiButton" type="button">Load from API</button>
+        </div>
+      </section>
     </aside>
 
     <main class="main-area">
@@ -61,7 +83,7 @@
         <div class="intersection">
           <div class="traffic-group">
             <h2>North - South</h2>
-            <div id="ns-counter" class="countdown" aria-live="polite">0s</div>
+            <div id="ns-counter" class="countdown countdown--green" aria-live="polite">0s</div>
             <div class="traffic-light">
               <div id="ns-red" class="light red"></div>
               <div id="ns-yellow" class="light yellow"></div>
@@ -71,7 +93,7 @@
 
           <div class="traffic-group">
             <h2>East - West</h2>
-            <div id="ew-counter" class="countdown" aria-live="polite">0s</div>
+            <div id="ew-counter" class="countdown countdown--red" aria-live="polite">0s</div>
             <div class="traffic-light">
               <div id="ew-red" class="light red active"></div>
               <div id="ew-yellow" class="light yellow"></div>

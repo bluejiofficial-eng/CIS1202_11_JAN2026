@@ -1,9 +1,16 @@
+const STORAGE_KEY = "trafficState";
+const LOG_STORAGE_KEY = "trafficEventLog";
+const API_STATE_ID_KEY = "trafficApiStateId";
+const API_BASE = "https://jsonplaceholder.typicode.com/posts";
+
+const TIMER_YELLOW_SECONDS = 3;
+
 let currentGreen = "NS";
 let isTransitioning = false;
 let transitionEndMs = null;
 let transitionFromDir = null;
-let transitionToDir = null;
 let transitionTimeoutId = null;
+let transitionPurpose = null;
 
 let pendingPedestrian = false;
 let pedestrianActive = false;
@@ -16,7 +23,6 @@ let goPhaseTimeoutId = null;
 
 let mode = "manual";
 let timerStarted = false;
-const TIMER_YELLOW_SECONDS = 3;
 
 const config = {
   pedWalkSeconds: 15,
@@ -24,7 +30,6 @@ const config = {
   nsGoSeconds: 12,
   ewGoSeconds: 12,
 };
-let shouldRestoreInitialDirection = false;
 
 function clampSeconds(value, fallback) {
   const parsed = Number.parseInt(value, 10);
@@ -36,18 +41,50 @@ function dirShort(direction) {
   return direction === "NS" ? "N–S" : "E–W";
 }
 
+function otherDir(direction) {
+  return direction === "NS" ? "EW" : "NS";
+}
+
 function nowStamp() {
-  const d = new Date();
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function getGoSeconds(direction) {
   return direction === "NS" ? config.nsGoSeconds : config.ewGoSeconds;
 }
 
-function logEvent(message) {
+function buildStatePayload() {
+  return {
+    currentGreen,
+    mode,
+    timerStarted,
+    config: { ...config },
+    savedAt: new Date().toISOString(),
+  };
+}
+
+function setBadge(elementId, text, variant) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.textContent = text;
+  el.className = `badge badge--${variant}`;
+}
+
+function updateModeBadge() {
+  const label = mode === "timer" ? (timerStarted ? "Timer · Running" : "Timer · Idle") : "Manual";
+  const variant = mode === "timer" ? "timer" : "manual";
+  setBadge("modeBadge", label, variant);
+}
+
+function logEvent(message, { persist = true } = {}) {
   const list = document.getElementById("eventLogList");
   if (!list) return;
+
+  const entry = { time: nowStamp(), message };
 
   const li = document.createElement("li");
   li.className = "event-log__item";
@@ -57,67 +94,237 @@ function logEvent(message) {
 
   const time = document.createElement("span");
   time.className = "event-log__time";
-  time.textContent = nowStamp();
+  time.textContent = entry.time;
 
   meta.appendChild(time);
 
   const msg = document.createElement("div");
   msg.className = "event-log__msg";
-  msg.textContent = message;
+  msg.textContent = entry.message;
 
   li.appendChild(meta);
   li.appendChild(msg);
   list.appendChild(li);
   list.scrollTop = list.scrollHeight;
-}
 
-async function fetchStateFromAPI() {
-  try {
-    const response = await fetch("https://jsonplaceholder.typicode.com/posts/1");
-    if (!response.ok) throw new Error("API state load failed");
-    await response.json();
-    logEvent("API: State loaded from server");
-  } catch (error) {
-    logEvent("API: State load failed");
+  if (persist) {
+    saveEventLog();
   }
 }
 
-async function sendStateToAPI(state) {
+function getEventLogEntries() {
+  const list = document.getElementById("eventLogList");
+  if (!list) return [];
+
+  return Array.from(list.querySelectorAll(".event-log__item")).map((item) => ({
+    time: item.querySelector(".event-log__time")?.textContent || "",
+    message: item.querySelector(".event-log__msg")?.textContent || "",
+  }));
+}
+
+function renderEventLog(entries) {
+  const list = document.getElementById("eventLogList");
+  if (!list) return;
+
+  list.innerHTML = "";
+  entries.forEach((entry) => {
+    logEvent(entry.message, { persist: false });
+  });
+}
+
+function saveEventLog() {
   try {
-    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+    const entries = getEventLogEntries().slice(-50);
+    localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.warn("Could not save event log:", error);
+  }
+}
+
+function loadEventLog() {
+  try {
+    const saved = localStorage.getItem(LOG_STORAGE_KEY);
+    if (!saved) return;
+
+    const entries = JSON.parse(saved);
+    if (!Array.isArray(entries)) return;
+
+    renderEventLog(entries.slice(-50));
+  } catch (error) {
+    console.warn("Could not load event log:", error);
+  }
+}
+
+function saveState({ log = true } = {}) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(buildStatePayload()));
+    setBadge("storageBadge", "Storage: Saved", "ok");
+    if (log) {
+      logEvent("Local storage: state saved");
+    }
+    return true;
+  } catch (error) {
+    setBadge("storageBadge", "Storage: Error", "warn");
+    logEvent("Local storage: save failed");
+    return false;
+  }
+}
+
+function applyLoadedState(state) {
+  if (state.currentGreen === "NS" || state.currentGreen === "EW") {
+    currentGreen = state.currentGreen;
+  }
+
+  if (state.mode === "manual" || state.mode === "timer") {
+    mode = state.mode;
+  }
+
+  timerStarted = false;
+
+  if (state.config && typeof state.config === "object") {
+    config.pedWalkSeconds = clampSeconds(state.config.pedWalkSeconds, config.pedWalkSeconds);
+    config.queueClearanceSeconds = clampSeconds(
+      state.config.queueClearanceSeconds,
+      config.queueClearanceSeconds
+    );
+    config.nsGoSeconds = clampSeconds(state.config.nsGoSeconds, config.nsGoSeconds);
+    config.ewGoSeconds = clampSeconds(state.config.ewGoSeconds, config.ewGoSeconds);
+  }
+
+  const modeToggle = document.getElementById("modeToggle");
+  const pedWalkInput = document.getElementById("pedWalkInput");
+  const queueInput = document.getElementById("queueClearanceInput");
+  const nsGoInput = document.getElementById("nsGoInput");
+  const ewGoInput = document.getElementById("ewGoInput");
+
+  if (modeToggle) modeToggle.checked = mode === "timer";
+  if (pedWalkInput) pedWalkInput.value = String(config.pedWalkSeconds);
+  if (queueInput) queueInput.value = String(config.queueClearanceSeconds);
+  if (nsGoInput) nsGoInput.value = String(config.nsGoSeconds);
+  if (ewGoInput) ewGoInput.value = String(config.ewGoSeconds);
+}
+
+function loadState({ log = true } = {}) {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+      setBadge("storageBadge", "Storage: Empty", "neutral");
+      return false;
+    }
+
+    const state = JSON.parse(saved);
+    applyLoadedState(state);
+    setBadge("storageBadge", "Storage: Loaded", "ok");
+    if (log) {
+      logEvent("Local storage: state loaded");
+    }
+    return true;
+  } catch (error) {
+    setBadge("storageBadge", "Storage: Error", "warn");
+    if (log) {
+      logEvent("Local storage: load failed");
+    }
+    return false;
+  }
+}
+
+function clearLocalStorage() {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(LOG_STORAGE_KEY);
+  localStorage.removeItem(API_STATE_ID_KEY);
+  setBadge("storageBadge", "Storage: Cleared", "neutral");
+  setBadge("apiBadge", "API: —", "neutral");
+
+  const list = document.getElementById("eventLogList");
+  if (list) list.innerHTML = "";
+
+  logEvent("Local storage: all data cleared");
+}
+
+async function syncStateToAPI() {
+  setBadge("apiBadge", "API: Syncing…", "neutral");
+
+  try {
+    const payload = buildStatePayload();
+    const savedId = localStorage.getItem(API_STATE_ID_KEY);
+    const endpoint = savedId ? `${API_BASE}/${savedId}` : API_BASE;
+    const method = savedId ? "PUT" : "POST";
+
+    const response = await fetch(endpoint, {
+      method,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        currentGreen: state.currentGreen,
-        mode: state.mode,
-        config: state.config,
+        title: "Traffic Control State",
+        body: JSON.stringify(payload),
+        userId: 1,
       }),
     });
 
     if (!response.ok) throw new Error("API sync failed");
-    logEvent("API: State synced to server");
+
+    const result = await response.json();
+    if (result.id) {
+      localStorage.setItem(API_STATE_ID_KEY, String(result.id));
+    }
+
+    setBadge("apiBadge", "API: Synced", "ok");
+    logEvent(`API: state synced (id ${result.id || savedId})`);
+    return true;
   } catch (error) {
-    logEvent("API: Sync failed");
+    setBadge("apiBadge", "API: Failed", "warn");
+    logEvent("API: sync failed");
+    return false;
   }
 }
 
-function saveState() {
-  localStorage.setItem(
-    "trafficState",
-    JSON.stringify({
-      currentGreen,
-      mode,
-      config,
-    })
-  );
+async function loadStateFromAPI() {
+  const savedId = localStorage.getItem(API_STATE_ID_KEY);
+  if (!savedId) {
+    setBadge("apiBadge", "API: No ID", "warn");
+    logEvent("API: no saved id — sync first");
+    return false;
+  }
+
+  setBadge("apiBadge", "API: Loading…", "neutral");
+
+  try {
+    const response = await fetch(`${API_BASE}/${savedId}`);
+    if (!response.ok) throw new Error("API load failed");
+
+    const result = await response.json();
+    const state = JSON.parse(result.body);
+    applyLoadedState(state);
+    resetToInitialState();
+    applyModeUI();
+    setBadge("apiBadge", "API: Loaded", "ok");
+    logEvent(`API: state loaded (id ${savedId})`);
+    saveState({ log: false });
+    return true;
+  } catch (error) {
+    setBadge("apiBadge", "API: Failed", "warn");
+    logEvent("API: load failed");
+    return false;
+  }
 }
 
-function setCounter(counterId, seconds) {
+function getCounterPhase(direction) {
+  const prefix = direction === "NS" ? "ns" : "ew";
+  const yellow = document.getElementById(`${prefix}-yellow`);
+  const green = document.getElementById(`${prefix}-green`);
+
+  if (yellow?.classList.contains("active")) return "yellow";
+  if (green?.classList.contains("active")) return "green";
+  return "red";
+}
+
+function setCounter(counterId, seconds, direction) {
   const counter = document.getElementById(counterId);
   if (!counter) return;
+
+  const phase = getCounterPhase(direction);
   counter.textContent = `${Math.max(0, Math.ceil(seconds))}s`;
+  counter.classList.remove("countdown--green", "countdown--yellow", "countdown--red");
+  counter.classList.add(`countdown--${phase}`);
 }
 
 function setPedestrianSignal(isWalk, seconds) {
@@ -137,11 +344,10 @@ function updateCounters() {
   let ewSeconds = 0;
 
   if (pedestrianActive) {
-    nsSeconds = currentGreen === "NS" ? pedestrianSecondsLeft : 0;
-    ewSeconds = currentGreen === "EW" ? pedestrianSecondsLeft : 0;
+    nsSeconds = pedestrianSecondsLeft;
+    ewSeconds = pedestrianSecondsLeft;
   } else if (isTransitioning && transitionEndMs) {
     const remaining = Math.max(0, (transitionEndMs - Date.now()) / 1000);
-    // During transition, the "from" direction is yellow, so keep timer aligned with that color state.
     nsSeconds = transitionFromDir === "NS" ? remaining : 0;
     ewSeconds = transitionFromDir === "EW" ? remaining : 0;
   } else if (mode === "timer" && timerStarted && goPhaseEndMs) {
@@ -150,18 +356,15 @@ function updateCounters() {
     ewSeconds = currentGreen === "EW" ? remaining : 0;
   }
 
-  setCounter("ns-counter", nsSeconds);
-  setCounter("ew-counter", ewSeconds);
+  setCounter("ns-counter", nsSeconds, "NS");
+  setCounter("ew-counter", ewSeconds, "EW");
 }
 
 function setLights(direction, color) {
-  const redId = direction === "NS" ? "ns-red" : "ew-red";
-  const yellowId = direction === "NS" ? "ns-yellow" : "ew-yellow";
-  const greenId = direction === "NS" ? "ns-green" : "ew-green";
-
-  const red = document.getElementById(redId);
-  const yellow = document.getElementById(yellowId);
-  const green = document.getElementById(greenId);
+  const prefix = direction === "NS" ? "ns" : "ew";
+  const red = document.getElementById(`${prefix}-red`);
+  const yellow = document.getElementById(`${prefix}-yellow`);
+  const green = document.getElementById(`${prefix}-green`);
   if (!red || !yellow || !green) return;
 
   red.classList.remove("active");
@@ -171,6 +374,11 @@ function setLights(direction, color) {
   if (color === "red") red.classList.add("active");
   if (color === "yellow") yellow.classList.add("active");
   if (color === "green") green.classList.add("active");
+}
+
+function setBothRed() {
+  setLights("NS", "red");
+  setLights("EW", "red");
 }
 
 function updateLabel() {
@@ -184,13 +392,13 @@ function setControlsDisabled(disabled) {
   const pedestrianButton = document.getElementById("pedestrianButton");
 
   if (switchButton) {
-    const shouldDisableSwitch = disabled || mode === "timer";
-    switchButton.disabled = shouldDisableSwitch;
+    switchButton.disabled = disabled || mode === "timer" || isTransitioning || pedestrianActive;
   }
 
   if (pedestrianButton) {
     const timerPedDisabled = mode === "timer" && !timerStarted;
-    pedestrianButton.disabled = disabled || pendingPedestrian || timerPedDisabled;
+    pedestrianButton.disabled =
+      disabled || pendingPedestrian || pedestrianActive || isTransitioning || timerPedDisabled;
   }
 }
 
@@ -202,15 +410,19 @@ function clearGoPhaseTimers() {
   goPhaseEndMs = null;
 }
 
-function onTransitionComplete() {
+function clearTransitionTimer() {
+  if (transitionTimeoutId) {
+    clearTimeout(transitionTimeoutId);
+    transitionTimeoutId = null;
+  }
   transitionEndMs = null;
   transitionFromDir = null;
-  transitionToDir = null;
-  transitionTimeoutId = null;
-  updateCounters();
+  transitionPurpose = null;
+}
 
+function onTransitionComplete() {
   if (pendingPedestrian) {
-    activatePedestrianCrossing();
+    startPedestrianClearance();
     return;
   }
 
@@ -219,26 +431,55 @@ function onTransitionComplete() {
   }
 }
 
-function switchSequence() {
-  if (isTransitioning || pedestrianActive) return;
+function runYellowClearance(fromDir, purpose, onDone) {
+  if (isTransitioning || pedestrianActive) return false;
 
   clearGoPhaseTimers();
+  clearTransitionTimer();
+
   isTransitioning = true;
+  transitionPurpose = purpose;
   setControlsDisabled(true);
 
-  const transitionSeconds = mode === "timer" ? TIMER_YELLOW_SECONDS : config.queueClearanceSeconds;
+  const clearanceSeconds =
+    mode === "timer" && purpose === "switch"
+      ? TIMER_YELLOW_SECONDS
+      : config.queueClearanceSeconds;
 
-  const fromDir = currentGreen;
-  const toDir = currentGreen === "NS" ? "EW" : "NS";
   transitionFromDir = fromDir;
-  transitionToDir = toDir;
-  transitionEndMs = Date.now() + transitionSeconds * 1000;
-  updateCounters();
+  transitionEndMs = Date.now() + clearanceSeconds * 1000;
 
   setLights(fromDir, "yellow");
-  logEvent(`Transition triggered — ${dirShort(fromDir)} going to WARNING`);
+  setLights(otherDir(fromDir), "red");
+  updateCounters();
+
+  logEvent(
+    purpose === "pedestrian"
+      ? `Pedestrian clearance — ${dirShort(fromDir)} WARNING`
+      : `Transition — ${dirShort(fromDir)} WARNING`
+  );
 
   transitionTimeoutId = setTimeout(() => {
+    isTransitioning = false;
+    transitionTimeoutId = null;
+    transitionEndMs = null;
+    transitionFromDir = null;
+    transitionPurpose = null;
+    onDone();
+    setControlsDisabled(false);
+    updateCounters();
+  }, clearanceSeconds * 1000);
+
+  return true;
+}
+
+function switchSequence() {
+  if (isTransitioning || pedestrianActive || pendingPedestrian) return;
+
+  const fromDir = currentGreen;
+  const toDir = otherDir(fromDir);
+
+  runYellowClearance(fromDir, "switch", () => {
     setLights(fromDir, "red");
     logEvent(`${dirShort(fromDir)} → STOP`);
 
@@ -246,17 +487,31 @@ function switchSequence() {
     logEvent(`${dirShort(toDir)} → GO`);
 
     currentGreen = toDir;
-    saveState();
-    sendStateToAPI({ currentGreen: toDir, mode, config });
     updateLabel();
-    isTransitioning = false;
-    setControlsDisabled(false);
+    saveState({ log: false });
+    updateCounters();
     onTransitionComplete();
-  }, transitionSeconds * 1000);
+  });
+}
+
+function startPedestrianClearance() {
+  if (pedestrianActive) return;
+
+  if (isTransitioning) return;
+
+  const activeDir = currentGreen;
+
+  runYellowClearance(activeDir, "pedestrian", () => {
+    setBothRed();
+    logEvent("All traffic STOP — pedestrian phase starting");
+    activatePedestrianCrossing();
+  });
 }
 
 function startGoPhase() {
-  if (mode !== "timer" || !timerStarted || isTransitioning || pedestrianActive) return;
+  if (mode !== "timer" || !timerStarted || isTransitioning || pedestrianActive || pendingPedestrian) {
+    return;
+  }
 
   clearGoPhaseTimers();
   const goSeconds = getGoSeconds(currentGreen);
@@ -264,7 +519,9 @@ function startGoPhase() {
   updateCounters();
 
   goPhaseTimeoutId = setTimeout(() => {
-    if (mode !== "timer" || !timerStarted || isTransitioning || pedestrianActive) return;
+    if (mode !== "timer" || !timerStarted || isTransitioning || pedestrianActive || pendingPedestrian) {
+      return;
+    }
     switchSequence();
   }, goSeconds * 1000);
 }
@@ -278,10 +535,9 @@ function activatePedestrianCrossing() {
   pedestrianSecondsLeft = config.pedWalkSeconds;
   setControlsDisabled(true);
 
-  setLights("NS", "red");
-  setLights("EW", "red");
+  setBothRed();
   setPedestrianSignal(true, pedestrianSecondsLeft);
-  logEvent("Pedestrian Crossing Activated — all traffic STOP");
+  logEvent("Pedestrian crossing active — WALK");
   updateCounters();
 
   pedestrianIntervalId = setInterval(() => {
@@ -296,10 +552,11 @@ function activatePedestrianCrossing() {
       pedestrianActive = false;
       setPedestrianSignal(false, 0);
       setLights(currentGreen, "green");
-      setLights(currentGreen === "NS" ? "EW" : "NS", "red");
+      setLights(otherDir(currentGreen), "red");
       setControlsDisabled(false);
       updateCounters();
-      logEvent("Pedestrian Crossing Complete — normal traffic resumed");
+      logEvent("Pedestrian crossing complete — traffic resumed");
+      saveState({ log: false });
 
       if (mode === "timer" && timerStarted) {
         startGoPhase();
@@ -317,25 +574,18 @@ function requestPedestrianCrossing() {
   setControlsDisabled(false);
 
   if (!isTransitioning) {
-    switchSequence();
+    startPedestrianClearance();
   }
 }
 
 function resetToInitialState() {
-  currentGreen = shouldRestoreInitialDirection ? currentGreen : "NS";
-  shouldRestoreInitialDirection = false;
   isTransitioning = false;
   pendingPedestrian = false;
   pedestrianActive = false;
   pedestrianSecondsLeft = 0;
-  transitionEndMs = null;
-  transitionFromDir = null;
-  transitionToDir = null;
 
-  if (transitionTimeoutId) {
-    clearTimeout(transitionTimeoutId);
-    transitionTimeoutId = null;
-  }
+  clearTransitionTimer();
+
   if (pedestrianIntervalId) {
     clearInterval(pedestrianIntervalId);
     pedestrianIntervalId = null;
@@ -343,26 +593,31 @@ function resetToInitialState() {
   clearGoPhaseTimers();
 
   setLights(currentGreen, "green");
-  setLights(currentGreen === "NS" ? "EW" : "NS", "red");
+  setLights(otherDir(currentGreen), "red");
   setPedestrianSignal(false, 0);
   updateLabel();
   updateCounters();
+  setControlsDisabled(false);
 }
 
 function stopTimerMode() {
   timerStarted = false;
   resetToInitialState();
-  setControlsDisabled(false);
-  logEvent("Timer stopped and simulation reset");
+  updateModeBadge();
+  logEvent("Timer stopped — simulation reset");
+  saveState({ log: false });
 }
 
 function startTimerMode() {
   if (mode !== "timer") return;
+
   timerStarted = true;
   pendingPedestrian = false;
-  setControlsDisabled(false);
+  updateModeBadge();
   logEvent("Timer started");
+  setControlsDisabled(false);
   startGoPhase();
+  saveState({ log: false });
 }
 
 function refreshConfigFromInputs() {
@@ -371,10 +626,10 @@ function refreshConfigFromInputs() {
   const nsGoInput = document.getElementById("nsGoInput");
   const ewGoInput = document.getElementById("ewGoInput");
 
-  config.pedWalkSeconds = clampSeconds(pedWalkInput ? pedWalkInput.value : config.pedWalkSeconds, 15);
-  config.queueClearanceSeconds = clampSeconds(queueInput ? queueInput.value : config.queueClearanceSeconds, 2);
-  config.nsGoSeconds = clampSeconds(nsGoInput ? nsGoInput.value : config.nsGoSeconds, 12);
-  config.ewGoSeconds = clampSeconds(ewGoInput ? ewGoInput.value : config.ewGoSeconds, 12);
+  config.pedWalkSeconds = clampSeconds(pedWalkInput?.value, config.pedWalkSeconds);
+  config.queueClearanceSeconds = clampSeconds(queueInput?.value, config.queueClearanceSeconds);
+  config.nsGoSeconds = clampSeconds(nsGoInput?.value, config.nsGoSeconds);
+  config.ewGoSeconds = clampSeconds(ewGoInput?.value, config.ewGoSeconds);
 
   if (pedWalkInput) pedWalkInput.value = String(config.pedWalkSeconds);
   if (queueInput) queueInput.value = String(config.queueClearanceSeconds);
@@ -387,27 +642,22 @@ function applyModeUI() {
   if (timerPanel) {
     timerPanel.classList.toggle("hidden", mode !== "timer");
   }
+  updateModeBadge();
   setControlsDisabled(false);
   updateCounters();
 }
 
 function setMode(newMode) {
   if (mode === newMode) return;
+
   mode = newMode;
+  timerStarted = false;
+  clearGoPhaseTimers();
+  clearTransitionTimer();
 
-  if (mode === "manual") {
-    timerStarted = false;
-    clearGoPhaseTimers();
-    logEvent("Mode changed to Manual");
-  } else {
-    timerStarted = false;
-    clearGoPhaseTimers();
-    logEvent("Mode changed to Timer");
-  }
-
+  logEvent(`Mode changed to ${mode === "timer" ? "Timer" : "Manual"}`);
   applyModeUI();
-  saveState();
-  sendStateToAPI({ currentGreen, mode, config });
+  saveState({ log: false });
 }
 
 function initModeControls() {
@@ -419,122 +669,96 @@ function initModeControls() {
   const timerStartButton = document.getElementById("timerStartButton");
   const timerStopButton = document.getElementById("timerStopButton");
 
-  if (modeToggle) {
-    modeToggle.addEventListener("change", () => {
-      setMode(modeToggle.checked ? "timer" : "manual");
-      if (mode === "timer") {
-        stopTimerMode();
-      } else {
-        resetToInitialState();
-      }
-    });
-  }
+  modeToggle?.addEventListener("change", () => {
+    setMode(modeToggle.checked ? "timer" : "manual");
+    resetToInitialState();
+  });
 
   [pedWalkInput, queueInput, nsGoInput, ewGoInput].forEach((input) => {
-    if (!input) return;
-    input.addEventListener("change", () => {
+    input?.addEventListener("change", () => {
       refreshConfigFromInputs();
-      if (mode === "timer" && timerStarted) {
+      saveState({ log: false });
+      if (mode === "timer" && timerStarted && !isTransitioning && !pedestrianActive) {
         startGoPhase();
       }
     });
   });
 
-  if (timerStartButton) {
-    timerStartButton.addEventListener("click", () => {
-      refreshConfigFromInputs();
-      startTimerMode();
-    });
-  }
+  timerStartButton?.addEventListener("click", () => {
+    refreshConfigFromInputs();
+    startTimerMode();
+  });
 
-  if (timerStopButton) {
-    timerStopButton.addEventListener("click", () => {
-      stopTimerMode();
-    });
-  }
+  timerStopButton?.addEventListener("click", () => {
+    stopTimerMode();
+  });
 }
 
-function saveState() {
-  const state = {
-    currentGreen,
-    mode,
-    config: { ...config },
-  };
-  localStorage.setItem("trafficState", JSON.stringify(state));
-}
+function initPersistControls() {
+  document.getElementById("saveLocalButton")?.addEventListener("click", () => {
+    refreshConfigFromInputs();
+    saveState();
+  });
 
-function loadState() {
-  try {
-    const saved = localStorage.getItem("trafficState");
-    if (!saved) return;
-
-    const state = JSON.parse(saved);
-
-    if (state.currentGreen === "NS" || state.currentGreen === "EW") {
-      currentGreen = state.currentGreen;
-      shouldRestoreInitialDirection = true;
+  document.getElementById("loadLocalButton")?.addEventListener("click", () => {
+    if (loadState()) {
+      resetToInitialState();
+      applyModeUI();
     }
+  });
 
-    if (state.mode === "manual" || state.mode === "timer") {
-      mode = state.mode;
-    }
+  document.getElementById("clearLocalButton")?.addEventListener("click", () => {
+    clearLocalStorage();
+    resetToInitialState();
+    applyModeUI();
+  });
 
-    if (state.config && typeof state.config === "object") {
-      config.pedWalkSeconds = clampSeconds(state.config.pedWalkSeconds, config.pedWalkSeconds);
-      config.queueClearanceSeconds = clampSeconds(state.config.queueClearanceSeconds, config.queueClearanceSeconds);
-      config.nsGoSeconds = clampSeconds(state.config.nsGoSeconds, config.nsGoSeconds);
-      config.ewGoSeconds = clampSeconds(state.config.ewGoSeconds, config.ewGoSeconds);
-    }
+  document.getElementById("syncApiButton")?.addEventListener("click", () => {
+    refreshConfigFromInputs();
+    syncStateToAPI();
+  });
 
-    const modeToggle = document.getElementById("modeToggle");
-    const pedWalkInput = document.getElementById("pedWalkInput");
-    const queueInput = document.getElementById("queueClearanceInput");
-    const nsGoInput = document.getElementById("nsGoInput");
-    const ewGoInput = document.getElementById("ewGoInput");
-
-    if (modeToggle) modeToggle.checked = mode === "timer";
-    if (pedWalkInput) pedWalkInput.value = String(config.pedWalkSeconds);
-    if (queueInput) queueInput.value = String(config.queueClearanceSeconds);
-    if (nsGoInput) nsGoInput.value = String(config.nsGoSeconds);
-    if (ewGoInput) ewGoInput.value = String(config.ewGoSeconds);
-  } catch (e) {
-    console.warn("Could not load saved state:", e);
-  }
+  document.getElementById("loadApiButton")?.addEventListener("click", () => {
+    loadStateFromAPI();
+  });
 }
 
 function init() {
-  loadState();
+  const hadSavedState = loadState({ log: false });
+  loadEventLog();
   resetToInitialState();
-  fetchStateFromAPI();
-  if (countdownIntervalId) clearInterval(countdownIntervalId);
-  countdownIntervalId = setInterval(updateCounters, 250);
-  logEvent(`${dirShort(currentGreen)} → GO`);
-  logEvent(`${dirShort(currentGreen === "NS" ? "EW" : "NS")} → STOP`);
-
-  const switchButton = document.getElementById("switchButton");
-  if (switchButton) {
-    switchButton.addEventListener("click", switchSequence);
-  }
-
-  const pedestrianButton = document.getElementById("pedestrianButton");
-  if (pedestrianButton) {
-    pedestrianButton.addEventListener("click", requestPedestrianCrossing);
-  }
-
-  const clearButton = document.getElementById("clearLogButton");
-  if (clearButton) {
-    clearButton.addEventListener("click", () => {
-      const list = document.getElementById("eventLogList");
-      if (list) list.innerHTML = "";
-      logEvent("Event log cleared");
-      logEvent(`${dirShort(currentGreen)} is currently GO`);
-      logEvent(`${dirShort(currentGreen === "NS" ? "EW" : "NS")} is currently STOP`);
-    });
-  }
-
   refreshConfigFromInputs();
   initModeControls();
+  initPersistControls();
   applyModeUI();
+
+  if (countdownIntervalId) clearInterval(countdownIntervalId);
+  countdownIntervalId = setInterval(updateCounters, 250);
+
+  if (!hadSavedState) {
+    logEvent(`${dirShort(currentGreen)} → GO`);
+    logEvent(`${dirShort(otherDir(currentGreen))} → STOP`);
+    setBadge("storageBadge", "Storage: Ready", "neutral");
+  } else {
+    logEvent("Session restored from local storage");
+    setBadge("storageBadge", "Storage: Restored", "ok");
+  }
+
+  if (localStorage.getItem(API_STATE_ID_KEY)) {
+    setBadge("apiBadge", "API: Ready", "neutral");
+  }
+
+  document.getElementById("switchButton")?.addEventListener("click", switchSequence);
+  document.getElementById("pedestrianButton")?.addEventListener("click", requestPedestrianCrossing);
+
+  document.getElementById("clearLogButton")?.addEventListener("click", () => {
+    const list = document.getElementById("eventLogList");
+    if (list) list.innerHTML = "";
+    saveEventLog();
+    logEvent("Event log cleared");
+    logEvent(`${dirShort(currentGreen)} is currently GO`);
+    logEvent(`${dirShort(otherDir(currentGreen))} is currently STOP`);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", init);
