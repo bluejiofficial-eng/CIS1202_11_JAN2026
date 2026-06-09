@@ -1,22 +1,21 @@
-// Function to toggle dark mode
 function toggleDarkMode() {
-    // Access the body element and toggle the 'dark-mode' class
     document.body.classList.toggle('dark-mode');
-    console.log("Dark mode toggled!"); 
 }
 
 function showSkills(type) {
-    // Get both skill containers from the HTML
     const tech = document.getElementById('tech-skills');
     const soft = document.getElementById('soft-skills');
+    const tabs = document.querySelectorAll('.skill-tab');
+
+    tabs.forEach((tab) => {
+        tab.classList.toggle('active', tab.dataset.skill === type);
+    });
 
     if (type === 'tech') {
-        // Show Technical, hide Soft
-        tech.style.display = 'block';
-        soft.style.display = 'none';
+        tech.hidden = false;
+        soft.hidden = true;
     } else {
-        // Hide Technical, show Soft
-        tech.style.display = 'none';
-        soft.style.display = 'block';
+        tech.hidden = true;
+        soft.hidden = false;
     }
 }
